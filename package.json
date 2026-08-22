@@ -1,0 +1,46 @@
+{
+  "name": "soulx-browser",
+  "version": "1.0.0",
+  "description": "SoulX Browser - Clean, Fast & Powerful Browser inspired by Soul Browser",
+  "main": "server/server.js",
+  "scripts": {
+    "dev": "concurrently \"node server/server.js\" \"vite --host 0.0.0.0\"",
+    "build": "vite build",
+    "start": "node server/server.js"
+  },
+  "keywords": [
+    "browser",
+    "soul-browser",
+    "media-sniffer",
+    "video-downloader",
+    "adblock",
+    "reader-mode"
+  ],
+  "author": "SoulX Team",
+  "license": "MIT",
+  "dependencies": {
+    "archiver": "^8.0.0",
+    "axios": "^1.19.0",
+    "canvas-confetti": "^1.9.4",
+    "cheerio": "^1.2.0",
+    "clsx": "^2.1.1",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "html2canvas": "^1.4.1",
+    "lucide-react": "^1.33.0",
+    "mime-types": "^3.0.2",
+    "qrcode": "^1.5.4",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "tailwind-merge": "^3.6.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-react": "^6.1.0",
+    "autoprefixer": "^10.5.4",
+    "concurrently": "^10.0.5",
+    "postcss": "^8.5.26",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.2.2"
+  }
+}
