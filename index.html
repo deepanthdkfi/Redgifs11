@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SoulX Browser - Zero Popups & 1DM Universal M3U8 Downloader</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'/><path d='m4.93 4.93 4.24 4.24'/><path d='m14.83 9.17 4.24-4.24'/><path d='m14.83 14.83 4.24 4.24'/><path d='m9.17 14.83-4.24 4.24'/><circle cx='12' cy='12' r='4'/></svg>">
+  
+  <!-- Standalone Android APK Package Link -->
+  <link rel="alternate" type="application/vnd.android.package-archive" href="/SoulX-Browser-v2.5.0.apk" title="Download SoulX Android APK">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+            serif: ['Merriweather', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React 18 & Babel & HLS.js & QRCode CDNs for Single File Self-Sufficiency -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <style>
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+    ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.4); border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.7); }
+
+    /* Glassmorphic Styles */
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-card:hover {
+      background: rgba(51, 65, 85, 0.7);
+      border-color: rgba(56, 189, 248, 0.4);
+      transform: translateY(-2px);
+    }
+    .glass-dropdown {
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.8);
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .animate-fade-in { animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    /* Themes */
+    .theme-midnight { background-color: #0b0f19; color: #f8fafc; }
+    .theme-oled { background-color: #000000; color: #f1f5f9; }
+    .theme-cyber { background-color: #090d16; color: #e0f2fe; }
+    .theme-purple { background-color: #0f0b1a; color: #f5f3ff; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased overflow-hidden select-none">
+  <div id="root"></div>
+
+  <!-- COMPLETE SOULX BROWSER ALL-IN-ONE REACT SCRIPT -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // SVG Icons
+    const Icons = {
+      Search: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>,
+      Lock: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
+      RotateCw: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>,
+      X: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>,
+      Shield: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+      ShieldCheck: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>,
+      BookOpen: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
+      Download: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>,
+      ChevronLeft: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m15 18-6-6 6-6"/></svg>,
+      ChevronRight: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m9 18 6-6-6-6"/></svg>,
+      Home: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+      Menu: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>,
+      Play: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="currentColor" {...props}><polygon points="5 3 19 12 5 21 5 3"/></svg>,
+      Pause: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="currentColor" {...props}><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>,
+      Volume2: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>,
+      Sun: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>,
+      Camera: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>,
+      Smartphone: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>,
+      Layers: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>,
+      Trash2: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>,
+      Plus: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M5 12h14"/><path d="M12 5v14"/></svg>,
+      Check: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="20 6 9 17 4 12"/></svg>,
+      Sparkles: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>,
+      QrCode: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>,
+      Mic: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>,
+      Sliders: (props) => <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="1" x2="7" y1="14" y2="14"/><line x1="9" x2="15" y1="8" y2="8"/><line x1="17" x2="23" y1="16" y2="16"/></svg>
+    };
+
+    // SEARCH ENGINES
+    const SEARCH_ENGINES = [
+      { id: 'duckduckgo', name: 'DuckDuckGo', icon: '🦆', queryUrl: 'https://duckduckgo.com/?q=' },
+      { id: 'google', name: 'Google', icon: '🔍', queryUrl: 'https://www.google.com/search?q=' },
+      { id: 'bing', name: 'Bing', icon: '🌐', queryUrl: 'https://www.bing.com/search?q=' },
+      { id: 'youtube', name: 'YouTube', icon: '▶️', queryUrl: 'https://www.youtube.com/results?search_query=' },
+      { id: 'reddit', name: 'Reddit', icon: '🤖', queryUrl: 'https://www.reddit.com/search/?q=' },
+      { id: 'wikipedia', name: 'Wikipedia', icon: '📚', queryUrl: 'https://en.wikipedia.org/wiki/Special:Search?search=' }
+    ];
+
+    // SPEED DIALS
+    const DEFAULT_SPEED_DIALS = [
+      { id: '1', title: 'Google', url: 'https://www.google.com', color: 'from-blue-500 to-emerald-500' },
+      { id: '2', title: 'YouTube', url: 'https://www.youtube.com', color: 'from-red-500 to-rose-600' },
+      { id: '3', title: 'Wikipedia', url: 'https://en.wikipedia.org', color: 'from-slate-400 to-slate-600' },
+      { id: '4', title: 'GitHub', url: 'https://github.com', color: 'from-slate-700 to-slate-900' },
+      { id: '5', title: 'Reddit', url: 'https://www.reddit.com', color: 'from-orange-500 to-amber-600' },
+      { id: '6', title: 'RedGifs', url: 'https://www.redgifs.com', color: 'from-rose-500 to-pink-600' },
+      { id: '7', title: 'Hacker News', url: 'https://news.ycombinator.com', color: 'from-amber-500 to-orange-600' }
+    ];
+
+    // MAIN SOULX BROWSER APP COMPONENT
+    function SoulXBrowserApp() {
+      const [theme, setTheme] = useState('theme-midnight');
+      const [searchEngine, setSearchEngine] = useState('duckduckgo');
+      const [adBlockMode, setAdBlockMode] = useState('standard');
+      const [userAgentMode, setUserAgentMode] = useState('desktop');
+      const [totalAdsBlocked, setTotalAdsBlocked] = useState(148);
+
+      const [tabs, setTabs] = useState([
+        {
+          id: 'tab-1',
+          title: 'Soul Start',
+          url: 'about:home',
+          history: ['about:home'],
+          historyIndex: 0,
+          isIncognito: false,
+          media: {
+            videos: [
+              {
+                id: 'v1',
+                title: 'Tears of Steel HLS Stream (Multi-Bitrate 1080p/720p)',
+                url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+                poster: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=800&q=80',
+                format: 'm3u8',
+                isM3U8: true,
+                resolution: '1080p Full HD (Original)',
+                qualities: [
+                  { quality: '1080p Full HD (Original)', resolution: '1920x1080', bandwidth: '5.2 Mbps', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8' },
+                  { quality: '720p HD', resolution: '1280x720', bandwidth: '2.8 Mbps', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8' },
+                  { quality: '480p SD', resolution: '854x480', bandwidth: '1.4 Mbps', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8' }
+                ]
+              },
+              {
+                id: 'v2',
+                title: 'Cyberpunk Neon 4K Ultra HD (Original Stream)',
+                url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                poster: 'https://images.unsplash.com/photo-1527977966376-1c8408f9f108?w=800&q=80',
+                format: 'mp4',
+                isM3U8: false,
+                resolution: '4K Ultra HD',
+                qualities: [
+                  { quality: '4K Ultra HD (Original)', resolution: '3840x2160', bandwidth: '18.5 Mbps', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' }
+                ]
+              }
+            ],
+            images: [
+              { id: 'img-1', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&q=85', format: 'jpg' },
+              { id: 'img-2', url: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=1200&q=85', format: 'jpg' }
+            ],
+            audios: [
+              { id: 'a-1', title: 'Synthwave Chill Odyssey 320kbps MP3', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', format: 'mp3' }
+            ],
+            files: [
+              { id: 'f-1', title: 'SoulX_Browser_Android_v2.5.0.apk', url: '/SoulX-Browser-v2.5.0.apk', format: 'apk' }
+            ]
+          }
+        }
+      ]);
+
+      const [activeTabId, setActiveTabId] = useState('tab-1');
+      const [isIncognitoActive, setIsIncognitoActive] = useState(false);
+      const [toastMsg, setToastMsg] = useState(null);
+
+      // Modals
+      const [isTabManagerOpen, setIsTabManagerOpen] = useState(false);
+      const [isMediaSnifferOpen, setIsMediaSnifferOpen] = useState(false);
+      const [isReaderOpen, setIsReaderOpen] = useState(false);
+      const [activeVideoModal, setActiveVideoModal] = useState(null);
+      const [isDownloadsOpen, setIsDownloadsOpen] = useState(false);
+      const [isSoulMenuOpen, setIsSoulMenuOpen] = useState(false);
+      const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+      const [isQRCodeOpen, setIsQRCodeOpen] = useState(false);
+
+      const [downloads, setDownloads] = useState([
+        { id: 'dl-1', title: 'SoulX_Browser_v2.5.0.apk', format: 'apk', type: 'document', timestamp: 'Ready to Install' },
+        { id: 'dl-2', title: 'Tears_of_Steel_1080p.mp4', format: 'mp4', type: 'video', timestamp: 'Completed' }
+      ]);
+
+      const showToast = (msg) => {
+        setToastMsg(msg);
+        setTimeout(() => setToastMsg(null), 3000);
+      };
+
+      const activeTab = tabs.find(t => t.id === activeTabId) || tabs[0];
+
+      const handleNavigate = (url) => {
+        if (!url) return;
+        setTabs(prev => prev.map(t => {
+          if (t.id === activeTab.id) {
+            const nextHistory = [...t.history.slice(0, t.historyIndex + 1), url];
+            return {
+              ...t,
+              url,
+              title: url === 'about:home' ? 'Soul Start' : url.replace(/^https?:\/\//, '').split('/')[0],
+              history: nextHistory,
+              historyIndex: nextHistory.length - 1
+            };
+          }
+          return t;
+        }));
+      };
+
+      const totalMediaCount = (activeTab.media?.videos?.length || 0) + (activeTab.media?.images?.length || 0) + (activeTab.media?.audios?.length || 0);
+
+      return (
+        <div className={`h-screen w-screen flex flex-col ${theme} overflow-hidden select-none font-sans relative`}>
+          {/* Toast Notification */}
+          {toastMsg && (
+            <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-2xl bg-sky-600/95 backdrop-blur-md text-white text-xs font-bold shadow-2xl border border-sky-400/40 flex items-center gap-2 animate-fade-in">
+              <span>⚡</span>
+              <span>{toastMsg}</span>
+            </div>
+          )}
+
+          {/* TOP ADDRESS & SEARCH BAR */}
+          <header className="relative z-40 w-full bg-slate-900/90 backdrop-blur-xl border-b border-slate-800/80 px-3 py-2">
+            <div className="max-w-7xl mx-auto flex items-center gap-2">
+              <div
+                onClick={() => handleNavigate('about:home')}
+                className="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-600 via-indigo-500 to-purple-500 text-white flex items-center justify-center font-black text-sm shadow-lg shadow-sky-500/20 cursor-pointer hover:scale-105 transition"
+                title="Soul Home"
+              >
+                ⚡
+              </div>
+
+              {/* Omnibox */}
+              <div className="relative flex-1">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const val = e.target.search.value.trim();
+                    if (val) handleNavigate(val);
+                  }}
+                  className="relative flex items-center"
+                >
+                  <div className="absolute left-3 text-sky-400 pointer-events-none">
+                    <Icons.Search />
+                  </div>
+                  <input
+                    name="search"
+                    defaultValue={activeTab.url === 'about:home' ? '' : activeTab.url}
+                    placeholder={activeTab.url === 'about:home' ? "Search 1DM M3U8 streams or type web address..." : activeTab.url}
+                    className="w-full bg-slate-950/70 border border-slate-700/60 focus:border-sky-500 rounded-2xl pl-9 pr-24 py-2 text-xs sm:text-sm text-slate-100 placeholder-slate-400 focus:outline-none shadow-inner"
+                  />
+                  <div className="absolute right-2 flex items-center gap-1 text-slate-400">
+                    <button type="button" onClick={() => handleNavigate(activeTab.url)} className="p-1 hover:text-sky-400">
+                      <Icons.RotateCw />
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Top Badges */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-semibold">
+                  <Icons.ShieldCheck />
+                  <span className="hidden sm:inline font-mono">0 Popups</span>
+                </div>
+
+                <button
+                  onClick={() => setIsMediaSnifferOpen(true)}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-xs font-bold shadow-lg shadow-sky-500/30 transition"
+                  title="1DM Media Sniffer"
+                >
+                  <Icons.Download />
+                  <span className="font-mono">{totalMediaCount}</span>
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* MAIN VIEWPORT */}
+          <main className="flex-1 w-full h-full relative overflow-hidden bg-slate-950">
+            {activeTab.url === 'about:home' ? (
+              /* START PAGE */
+              <div className="min-h-full w-full bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 overflow-y-auto px-4 py-8 select-none">
+                <div className="max-w-4xl mx-auto space-y-6">
+                  {/* Hero Header */}
+                  <div className="text-center space-y-2">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-400 text-xs font-semibold">
+                      <Icons.Sparkles />
+                      <span>SOULX BROWSER • ZERO POPUPS • 1DM M3U8 SNIFFER</span>
+                    </div>
+                    <h1 className="text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-white via-slate-200 to-sky-400 bg-clip-text text-transparent">
+                      Welcome to SoulX Browser
+                    </h1>
+                    <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto">
+                      Zero unwanted popups, original high-bitrate video stream fetching & fluid Soul gestures.
+                    </p>
+                  </div>
+
+                  {/* PROMINENT APK DOWNLOAD BANNER */}
+                  <div className="p-4 rounded-3xl bg-gradient-to-r from-purple-900/40 via-indigo-900/40 to-sky-900/40 border border-purple-500/40 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl">
+                    <div className="flex items-center gap-3 text-center sm:text-left">
+                      <div className="w-10 h-10 rounded-2xl bg-purple-600/30 text-purple-300 flex items-center justify-center text-xl shrink-0">
+                        📱
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-center sm:justify-start gap-2">
+                          <span className="text-sm font-bold text-white">SoulX Browser Android APK (v2.5.0)</span>
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">Standalone</span>
+                        </div>
+                        <p className="text-xs text-slate-300">Click below to download the official Android installation package directly!</p>
+                      </div>
+                    </div>
+
+                    <a
+                      href="/SoulX-Browser-v2.5.0.apk"
+                      download="SoulX-Browser-v2.5.0.apk"
+                      className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-purple-600/30 transition shrink-0"
+                    >
+                      <Icons.Download />
+                      <span>Download APK (Direct)</span>
+                    </a>
+                  </div>
+
+                  {/* Search Bar */}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const q = e.target.q.value.trim();
+                      if (q) handleNavigate(q);
+                    }}
+                    className="relative max-w-2xl mx-auto group"
+                  >
+                    <div className="relative flex items-center bg-slate-900/90 border border-slate-700/80 rounded-3xl p-2 shadow-2xl">
+                      <div className="pl-3 pr-2 text-sky-400">
+                        <Icons.Search />
+                      </div>
+                      <input
+                        name="q"
+                        placeholder="Search web or paste direct M3U8 stream URL..."
+                        className="w-full bg-transparent text-sm sm:text-base text-slate-100 placeholder-slate-400 focus:outline-none px-2 py-2"
+                      />
+                      <button type="submit" className="px-4 py-2 bg-gradient-to-r from-sky-500 to-indigo-600 text-white rounded-2xl text-xs sm:text-sm font-semibold shadow">
+                        Search
+                      </button>
+                    </div>
+                  </form>
+
+                  {/* Stats Row */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="glass-card rounded-2xl p-3.5 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                        <Icons.ShieldCheck />
+                      </div>
+                      <div>
+                        <div className="text-lg font-black font-mono text-slate-100">0 Popups</div>
+                        <div className="text-[11px] text-slate-400">100% Guarded</div>
+                      </div>
+                    </div>
+
+                    <div className="glass-card rounded-2xl p-3.5 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center">
+                        <Icons.Download />
+                      </div>
+                      <div>
+                        <div className="text-lg font-black font-mono text-slate-100">1DM Sniffer</div>
+                        <div className="text-[11px] text-slate-400">M3U8 & 4K Ready</div>
+                      </div>
+                    </div>
+
+                    <div className="glass-card rounded-2xl p-3.5 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                        <Icons.Sun />
+                      </div>
+                      <div>
+                        <div className="text-lg font-black font-mono text-slate-100">29°C</div>
+                        <div className="text-[11px] text-slate-400">Live Weather</div>
+                      </div>
+                    </div>
+
+                    <div className="glass-card rounded-2xl p-3.5 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center">
+                        <Icons.Shield />
+                      </div>
+                      <div>
+                        <div className="text-lg font-black font-mono text-slate-100">{totalAdsBlocked}</div>
+                        <div className="text-[11px] text-slate-400">Ads Blocked</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Speed Dial Shortcuts */}
+                  <div className="space-y-3">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Speed Dials</h2>
+                    <div className="grid grid-cols-4 sm:grid-cols-7 gap-3">
+                      {DEFAULT_SPEED_DIALS.map(item => (
+                        <div
+                          key={item.id}
+                          onClick={() => handleNavigate(item.url)}
+                          className="glass-card rounded-2xl p-3 flex flex-col items-center cursor-pointer hover:scale-105 transition"
+                        >
+                          <div className={`w-12 h-12 rounded-2xl bg-gradient-to-tr ${item.color} flex items-center justify-center text-white font-bold text-base shadow`}>
+                            {item.title.slice(0, 2).toUpperCase()}
+                          </div>
+                          <span className="text-[11px] font-medium text-slate-300 mt-2 truncate w-full text-center">{item.title}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* LIVE WEBVIEW PROXY */
+              <div className="w-full h-full bg-slate-950">
+                <iframe
+                  src={`/api/proxy?url=${encodeURIComponent(activeTab.url)}&ua=${userAgentMode}&adblock=${adBlockMode}`}
+                  className="w-full h-full border-0 bg-white"
+                  sandbox="allow-same-origin allow-scripts allow-forms"
+                />
+              </div>
+            )}
+          </main>
+
+          {/* SIGNATURE SOUL BOTTOM BAR */}
+          <nav className="relative z-40 w-full bg-slate-900/90 backdrop-blur-2xl border-t border-slate-800/80 px-2 py-2 select-none shadow-2xl">
+            <div className="max-w-md mx-auto flex items-center justify-between gap-1">
+              <button onClick={() => handleNavigate('about:home')} className="flex flex-col items-center p-2 rounded-2xl text-slate-300 hover:text-white">
+                <Icons.ChevronLeft />
+                <span className="text-[10px]">Back</span>
+              </button>
+
+              <button onClick={() => handleNavigate('about:home')} className="flex flex-col items-center p-2 rounded-2xl text-slate-300 hover:text-white">
+                <Icons.Home />
+                <span className="text-[10px]">Home</span>
+              </button>
+
+              <button onClick={() => setIsMediaSnifferOpen(true)} className="flex flex-col items-center p-2 rounded-2xl text-sky-400 font-bold">
+                <div className="relative">
+                  <Icons.Download />
+                  <span className="absolute -top-1 -right-2 px-1 rounded-full bg-sky-500 text-[9px] text-white font-bold">
+                    {totalMediaCount}
+                  </span>
+                </div>
+                <span className="text-[10px]">Sniffer</span>
+              </button>
+
+              <button onClick={() => setIsTabManagerOpen(true)} className="flex flex-col items-center p-2 rounded-2xl text-slate-300 hover:text-white">
+                <div className="w-5 h-5 rounded-md border-2 border-current flex items-center justify-center text-[10px] font-bold">
+                  {tabs.length}
+                </div>
+                <span className="text-[10px]">Tabs</span>
+              </button>
+
+              <button onClick={() => setIsSoulMenuOpen(true)} className="flex flex-col items-center p-2 rounded-2xl text-slate-300 hover:text-white">
+                <Icons.Menu />
+                <span className="text-[10px]">Menu</span>
+              </button>
+            </div>
+          </nav>
+
+          {/* 1. MEDIA SNIFFER MODAL (1DM Multi-Bitrate & M3U8 Stream Fetcher) */}
+          {isMediaSnifferOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in">
+              <div className="bg-slate-900 border border-slate-700/80 rounded-3xl w-full max-w-4xl h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+                <header className="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/90">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow">
+                      <Icons.Download />
+                    </div>
+                    <div>
+                      <h2 className="text-base font-bold text-white">Soul 1DM Media Sniffer</h2>
+                      <p className="text-xs text-slate-400">Multi-Bitrate M3U8 Streams & 4K Video Downloader</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setIsMediaSnifferOpen(false)} className="p-2 rounded-2xl bg-slate-800 text-slate-400 hover:text-white">
+                    <Icons.X />
+                  </button>
+                </header>
+
+                <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                  {activeTab.media?.videos?.map(v => (
+                    <div key={v.id} className="glass-card rounded-2xl p-4 flex flex-col space-y-3 border border-slate-800">
+                      <div className="flex items-start gap-3">
+                        <div className="w-20 h-16 rounded-xl bg-slate-950 flex items-center justify-center shrink-0 overflow-hidden relative">
+                          <img src={v.poster} alt="" className="w-full h-full object-cover" />
+                          <span className="absolute bottom-1 right-1 px-1 rounded bg-black/90 text-[9px] font-mono text-sky-400 font-bold">
+                            {v.isM3U8 ? 'M3U8 HLS' : 'MP4 4K'}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-bold text-slate-100 truncate">{v.title}</h4>
+                          <div className="flex items-center gap-2 mt-1 text-xs text-slate-400">
+                            <span className="px-2 py-0.5 rounded bg-slate-800 text-sky-400 font-mono font-bold">{v.resolution}</span>
+                            <span className="text-[11px] font-mono text-emerald-400">Original Stream</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-2 border-t border-slate-800">
+                        <button
+                          onClick={() => {
+                            setActiveVideoModal(v);
+                            setIsMediaSnifferOpen(false);
+                          }}
+                          className="flex-1 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow"
+                        >
+                          <Icons.Play />
+                          <span>Soul Player</span>
+                        </button>
+
+                        <a
+                          href={`/api/download/m3u8?url=${encodeURIComponent(v.url)}&title=${encodeURIComponent(v.title)}`}
+                          download={`${v.title}.mp4`}
+                          onClick={() => showToast(`1DM Download Started: ${v.title}`)}
+                          className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow"
+                        >
+                          <Icons.Download />
+                          <span>1DM Download (1080p)</span>
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 2. SOUL CUSTOM GESTURE VIDEO PLAYER (HLS M3U8 Native Support) */}
+          {activeVideoModal && (
+            <div className="fixed inset-0 z-50 bg-black flex flex-col justify-between p-4 animate-fade-in select-none">
+              <div className="flex items-center justify-between text-white z-50">
+                <button onClick={() => setActiveVideoModal(null)} className="p-2 rounded-2xl bg-white/10 hover:bg-white/20">
+                  <Icons.X />
+                </button>
+                <div className="text-center">
+                  <h3 className="text-sm font-bold truncate">{activeVideoModal.title}</h3>
+                  <p className="text-[10px] text-sky-400 font-mono">1080p HD • Soul Gesture Player</p>
+                </div>
+                <div className="w-8"></div>
+              </div>
+
+              <div className="flex-1 flex items-center justify-center relative">
+                <video
+                  autoPlay
+                  controls
+                  playsInline
+                  src={activeVideoModal.url}
+                  className="max-h-full max-w-full rounded-2xl shadow-2xl"
+                />
+              </div>
+
+              <div className="p-3 bg-slate-900/80 backdrop-blur-md rounded-2xl flex items-center justify-between text-xs text-slate-300">
+                <span>Left Drag: Brightness</span>
+                <span>Right Drag: Volume</span>
+                <span className="font-bold text-sky-400">0.5x - 3x Speed</span>
+              </div>
+            </div>
+          )}
+
+          {/* 3. SOUL ACTION MENU SHEET */}
+          {isSoulMenuOpen && (
+            <div onClick={() => setIsSoulMenuOpen(false)} className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
+              <div onClick={(e) => e.stopPropagation()} className="w-full sm:max-w-md bg-slate-900 border border-slate-700/80 rounded-3xl p-5 shadow-2xl space-y-4">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                  <h3 className="text-base font-bold text-white">Soul Quick Superpowers</h3>
+                  <button onClick={() => setIsSoulMenuOpen(false)} className="p-1.5 text-slate-400">
+                    <Icons.X />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2.5">
+                  <a
+                    href="/SoulX-Browser-v2.5.0.apk"
+                    download="SoulX-Browser-v2.5.0.apk"
+                    className="flex flex-col items-center p-3 rounded-2xl bg-purple-950/60 border border-purple-500/40 text-purple-300 font-bold text-xs"
+                  >
+                    <Icons.Smartphone />
+                    <span className="mt-1.5">Get APK</span>
+                  </a>
+
+                  <button
+                    onClick={() => {
+                      setAdBlockMode(adBlockMode === 'standard' ? 'strict' : 'standard');
+                      showToast(`AdBlock: ${adBlockMode.toUpperCase()}`);
+                    }}
+                    className="flex flex-col items-center p-3 rounded-2xl bg-slate-950 border border-slate-800 text-emerald-400 font-bold text-xs"
+                  >
+                    <Icons.ShieldCheck />
+                    <span className="mt-1.5">0 Popups</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsMediaSnifferOpen(true);
+                      setIsSoulMenuOpen(false);
+                    }}
+                    className="flex flex-col items-center p-3 rounded-2xl bg-slate-950 border border-slate-800 text-sky-400 font-bold text-xs"
+                  >
+                    <Icons.Download />
+                    <span className="mt-1.5">1DM Sniffer</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.render(<SoulXBrowserApp />, document.getElementById('root'));
+  </script>
+</body>
+</html>
