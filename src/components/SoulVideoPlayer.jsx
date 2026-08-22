@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import Hls from 'hls.js';
 import {
   X,
   Play,
@@ -14,7 +15,9 @@ import {
   Rewind,
   Download,
   Tv,
-  Settings
+  Settings,
+  Radio,
+  Sliders
 } from 'lucide-react';
 
 export default function SoulVideoPlayer({
@@ -25,6 +28,7 @@ export default function SoulVideoPlayer({
 }) {
   const videoRef = useRef(null);
   const containerRef = useRef(null);
+  const hlsRef = useRef(null);
 
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState(1);
@@ -32,13 +36,53 @@ export default function SoulVideoPlayer({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [aspectRatio, setAspectRatio] = useState('contain'); // 'contain' | 'cover' | 'fill'
+  const [aspectRatio, setAspectRatio] = useState('contain');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isLooping, setIsLooping] = useState(false);
   const [screenshotSuccess, setScreenshotSuccess] = useState(false);
+  const [streamQualityInfo, setStreamQualityInfo] = useState('1080p Full HD');
 
-  // Auto hide controls timer
+  // HLS .m3u8 Player Integration
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !videoUrl) return;
+
+    const isM3U8 = videoUrl.includes('.m3u8') || videoUrl.includes('m3u8');
+
+    if (isM3U8 && Hls.isSupported()) {
+      const hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: true,
+        backBufferLength: 90
+      });
+      hls.loadSource(videoUrl);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play().catch(() => {});
+        setIsPlaying(true);
+        if (hls.levels && hls.levels.length > 0) {
+          const maxLevel = hls.levels[hls.levels.length - 1];
+          setStreamQualityInfo(`${maxLevel.height || 1080}p HD (HLS Stream)`);
+        }
+      });
+      hlsRef.current = hls;
+
+      return () => {
+        hls.destroy();
+        hlsRef.current = null;
+      };
+    } else if (isM3U8 && video.canPlayType('application/vnd.apple.mpegurl')) {
+      // Native Apple HLS support (Safari/iOS)
+      video.src = videoUrl;
+      video.play().catch(() => {});
+    } else {
+      video.src = videoUrl;
+      video.play().catch(() => {});
+    }
+  }, [videoUrl]);
+
+  // Auto-hide controls
   useEffect(() => {
     let timer;
     if (isPlaying) {
@@ -92,8 +136,8 @@ export default function SoulVideoPlayer({
   const handleTakeScreenshot = () => {
     if (!videoRef.current) return;
     const canvas = document.createElement('canvas');
-    canvas.width = videoRef.current.videoWidth || 1280;
-    canvas.height = videoRef.current.videoHeight || 720;
+    canvas.width = videoRef.current.videoWidth || 1920;
+    canvas.height = videoRef.current.videoHeight || 1080;
     const ctx = canvas.getContext('2d');
     ctx.filter = `brightness(${brightness})`;
     ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
@@ -130,10 +174,8 @@ export default function SoulVideoPlayer({
       className="fixed inset-0 z-50 bg-black flex items-center justify-center select-none overflow-hidden"
       style={{ filter: `brightness(${brightness})` }}
     >
-      {/* HTML5 Video Element */}
       <video
         ref={videoRef}
-        src={videoUrl}
         autoPlay
         playsInline
         loop={isLooping}
@@ -144,11 +186,10 @@ export default function SoulVideoPlayer({
         style={{ objectFit: aspectRatio }}
       />
 
-      {/* Screenshot Flash Notification */}
       {screenshotSuccess && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-sky-500/90 text-white px-6 py-3 rounded-2xl font-bold shadow-2xl flex items-center gap-2 animate-bounce">
           <Camera className="w-5 h-5" />
-          <span>Frame Screenshot Saved!</span>
+          <span>Frame Screenshot Saved! (PNG)</span>
         </div>
       )}
 
@@ -170,7 +211,12 @@ export default function SoulVideoPlayer({
             </button>
             <div className="truncate max-w-xs sm:max-w-md">
               <h3 className="text-sm font-bold text-white truncate">{videoTitle}</h3>
-              <p className="text-[11px] text-slate-400">Soul Gesture Player</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-400 text-[10px] font-mono font-bold">
+                  {streamQualityInfo}
+                </span>
+                <span className="text-[10px] text-slate-400">Soul Gesture Player</span>
+              </div>
             </div>
           </div>
 
@@ -201,7 +247,7 @@ export default function SoulVideoPlayer({
                 setAspectRatio(modes[nextIdx]);
               }}
               className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold font-mono uppercase backdrop-blur-md transition"
-              title="Change Aspect Ratio"
+              title="Aspect Ratio"
             >
               {aspectRatio}
             </button>
@@ -211,7 +257,7 @@ export default function SoulVideoPlayer({
               <button
                 onClick={() => onDownload({ url: videoUrl, title: videoTitle, format: 'mp4' })}
                 className="p-2 rounded-2xl bg-sky-600 hover:bg-sky-500 text-white shadow-lg shadow-sky-600/30 transition"
-                title="Download Video"
+                title="1DM Download Video"
               >
                 <Download className="w-4 h-4" />
               </button>
@@ -219,7 +265,7 @@ export default function SoulVideoPlayer({
           </div>
         </div>
 
-        {/* Center Big Play / Skip Controls */}
+        {/* Center Skip & Play Controls */}
         <div className="flex items-center justify-center gap-8">
           <button
             onClick={() => handleSkip(-10)}
@@ -262,9 +308,8 @@ export default function SoulVideoPlayer({
           </div>
 
           <div className="flex items-center justify-between pt-1">
-            {/* Volume & Brightness Sliders */}
+            {/* Gesture Sliders (Brightness & Volume) */}
             <div className="flex items-center gap-4">
-              {/* Volume Slider */}
               <div className="flex items-center gap-1.5 text-slate-300">
                 <Volume2 className="w-4 h-4" />
                 <input
@@ -282,7 +327,6 @@ export default function SoulVideoPlayer({
                 />
               </div>
 
-              {/* Brightness Slider */}
               <div className="hidden sm:flex items-center gap-1.5 text-slate-300">
                 <Sun className="w-4 h-4" />
                 <input

@@ -16,7 +16,10 @@ import {
   Download,
   Flame,
   Newspaper,
-  Check
+  Check,
+  Smartphone,
+  ShieldCheck,
+  Radio
 } from 'lucide-react';
 
 const DEFAULT_SPEED_DIALS = [
@@ -53,7 +56,6 @@ export default function StartPage({
     localStorage.setItem('soul_speed_dials', JSON.stringify(speedDials));
   }, [speedDials]);
 
-  // Load weather and trending feeds
   useEffect(() => {
     fetch('/api/weather')
       .then(res => res.json())
@@ -98,7 +100,6 @@ export default function StartPage({
     setSpeedDials(speedDials.filter(item => item.id !== id));
   };
 
-  // Get greeting based on time of day
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good Morning';
@@ -112,21 +113,46 @@ export default function StartPage({
   }) || [];
 
   return (
-    <div className="min-h-full w-full bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 overflow-y-auto px-4 py-8 sm:py-12 select-none">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <div className="min-h-full w-full bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 overflow-y-auto px-4 py-6 sm:py-10 select-none">
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Brand Header */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-400 text-xs font-semibold tracking-wide">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>SOUL BROWSER • ULTRA FAST & CLEAN</span>
+            <span>SOULX BROWSER • ZERO POPUPS • 1DM M3U8 DOWNLOADER</span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-sky-400 bg-clip-text text-transparent">
             {getGreeting()}, Explorer
           </h1>
           <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto">
-            Zero ads, powerful media sniffer, distraction-free reader mode & buttery smooth navigation.
+            Zero unwanted popups, original high-bitrate video stream fetching & fluid Soul gestures.
           </p>
+        </div>
+
+        {/* Prominent Direct APK Download Banner */}
+        <div className="p-4 rounded-3xl bg-gradient-to-r from-purple-900/40 via-indigo-900/40 to-sky-900/40 border border-purple-500/40 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl">
+          <div className="flex items-center gap-3 text-center sm:text-left">
+            <div className="w-10 h-10 rounded-2xl bg-purple-600/30 text-purple-300 flex items-center justify-center text-xl shrink-0">
+              📱
+            </div>
+            <div>
+              <div className="flex items-center justify-center sm:justify-start gap-2">
+                <span className="text-sm font-bold text-white">SoulX Browser Android APK v2.5.0</span>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">Ready</span>
+              </div>
+              <p className="text-xs text-slate-300">Click below to download the official Android installation package directly!</p>
+            </div>
+          </div>
+
+          <a
+            href="/SoulX-Browser-v2.5.0.apk"
+            download="SoulX-Browser-v2.5.0.apk"
+            className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-purple-600/30 transition shrink-0"
+          >
+            <Download className="w-4 h-4" />
+            <span>Download APK (Direct)</span>
+          </a>
         </div>
 
         {/* Big Omnibox Search Field */}
@@ -140,7 +166,7 @@ export default function StartPage({
               type="text"
               value={searchVal}
               onChange={(e) => setSearchVal(e.target.value)}
-              placeholder="Search the web or paste direct URL..."
+              placeholder="Search or paste direct URL (e.g. YouTube, RedGifs, M3U8 stream)..."
               className="w-full bg-transparent text-sm sm:text-base text-slate-100 placeholder-slate-400 focus:outline-none px-2 py-2"
             />
             <button
@@ -152,7 +178,7 @@ export default function StartPage({
           </div>
         </form>
 
-        {/* Quick Trending Keyword Pills */}
+        {/* Trending Pills */}
         {trendingData?.trendingTopics && (
           <div className="flex items-center justify-center flex-wrap gap-2 pt-1">
             <div className="flex items-center gap-1 text-[11px] font-bold text-amber-400 uppercase tracking-wider mr-1">
@@ -171,38 +197,35 @@ export default function StartPage({
           </div>
         )}
 
-        {/* Stats & Weather Row */}
+        {/* Stats Row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {/* AdBlock Card */}
           <div className="glass-card rounded-2xl p-3.5 flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-              <Shield className="w-5 h-5" />
+              <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-base sm:text-lg font-black text-slate-100 font-mono">{adsBlocked}</div>
-              <div className="text-[11px] text-slate-400 font-medium">Ads Blocked</div>
+              <div className="text-base sm:text-lg font-black text-slate-100 font-mono">0 Popups</div>
+              <div className="text-[11px] text-slate-400 font-medium">100% Guarded</div>
             </div>
           </div>
 
-          {/* Data Saved Card */}
           <div className="glass-card rounded-2xl p-3.5 flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center shrink-0">
-              <Zap className="w-5 h-5" />
+              <Radio className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-base sm:text-lg font-black text-slate-100 font-mono">{dataSavedMB} MB</div>
-              <div className="text-[11px] text-slate-400 font-medium">Data Saved</div>
+              <div className="text-base sm:text-lg font-black text-slate-100 font-mono">1DM Sniffer</div>
+              <div className="text-[11px] text-slate-400 font-medium">M3U8 & 4K Ready</div>
             </div>
           </div>
 
-          {/* Live Weather Card */}
           <div className="glass-card rounded-2xl p-3.5 flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
               <CloudSun className="w-5 h-5" />
             </div>
             <div className="truncate">
               <div className="text-base sm:text-lg font-black text-slate-100 font-mono">
-                {weatherData ? weatherData.temp : '28°C'}
+                {weatherData ? weatherData.temp : '29°C'}
               </div>
               <div className="text-[11px] text-slate-400 font-medium truncate">
                 {weatherData ? weatherData.city : 'Live Weather'}
@@ -210,14 +233,13 @@ export default function StartPage({
             </div>
           </div>
 
-          {/* Privacy Score Card */}
           <div className="glass-card rounded-2xl p-3.5 flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0">
-              <Sparkles className="w-5 h-5" />
+              <Shield className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-base sm:text-lg font-black text-emerald-400 font-mono">100%</div>
-              <div className="text-[11px] text-slate-400 font-medium">Privacy Guard</div>
+              <div className="text-base sm:text-lg font-black text-slate-100 font-mono">{adsBlocked}</div>
+              <div className="text-[11px] text-slate-400 font-medium">Ads Blocked</div>
             </div>
           </div>
         </div>
@@ -245,7 +267,6 @@ export default function StartPage({
                 onClick={() => onNavigate(item.url)}
                 className="group relative flex flex-col items-center p-3 rounded-2xl glass-card cursor-pointer transition hover:scale-105 active:scale-95"
               >
-                {/* Delete button on hover */}
                 <button
                   onClick={(e) => handleDeleteSpeedDial(item.id, e)}
                   className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-lg"
@@ -263,7 +284,6 @@ export default function StartPage({
               </div>
             ))}
 
-            {/* Add New Tile */}
             <div
               onClick={() => setIsAddModalOpen(true)}
               className="flex flex-col items-center justify-center p-3 rounded-2xl border border-dashed border-slate-700 hover:border-sky-500/60 hover:bg-slate-800/40 text-slate-500 hover:text-sky-400 cursor-pointer transition"
@@ -284,9 +304,8 @@ export default function StartPage({
               <span>Soul Discovery Feed</span>
             </h2>
 
-            {/* Filter categories */}
             <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
-              {['All', 'Tech', 'Privacy', 'Dev'].map(cat => (
+              {['All', 'Tech', 'Privacy', 'Media'].map(cat => (
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
